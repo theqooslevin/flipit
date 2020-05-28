@@ -1,12 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flipit/components/flipit_physics.dart';
-import 'package:flipit/components/flipit_scrollbar.dart';
-
-import 'flipit_physics.dart';
-import 'flipit_scrollbar.dart';
-import 'flipit_scrollbar.dart';
+import 'package:flipit/flipit.dart';
 
 /// Flipit Carousel Widget
 class FlipitCarousel extends StatefulWidget{
@@ -111,18 +106,20 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
       itemDimension: _itemWidth,
     );
     _scrollController = ScrollController();
-
-    _scrollController.addListener((){
-      currentOffset = (_scrollController.offset/_itemWidth);
-      currentPage = currentOffset;
-      if(currentPage<=0) currentPage = 0;
-      else if((currentPage-currentPage.toInt()) >= 0.5) currentPage = currentPage.toInt()+1.0;
-    });
+    _scrollController.addListener(_scrollListener);
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_scrollListener);
     super.dispose();
+  }
+
+  void _scrollListener() {
+    currentOffset = (_scrollController.offset/_itemWidth);
+    currentPage = currentOffset;
+    if(currentPage<=0) currentPage = 0;
+    else if((currentPage-currentPage.toInt()) >= 0.5) currentPage = currentPage.toInt()+1.0;
   }
 
   @override
@@ -171,6 +168,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                   controller: _scrollController,
                   physics: _scrollPhysics,
                   scrollDirection: Axis.horizontal,
+                  shrinkWrap: false,
                   itemCount: _widgets.length,
                   itemBuilder: (context, index){
                     return Container(

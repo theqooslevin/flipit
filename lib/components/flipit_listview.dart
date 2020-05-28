@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flipit/components/flipit_physics.dart';
-import 'package:flipit/components/flipit_scrollbar.dart';
+import 'package:flipit/flipit.dart';
 
 /// Flipit Widget
 class FlipitListView extends StatefulWidget{
