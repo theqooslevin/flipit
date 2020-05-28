@@ -159,13 +159,6 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                     }
                   } else if (scrollNotification is ScrollEndNotification) {
                     try{
-                      Future.delayed(Duration.zero,(){
-                        _scrollController.animateTo(
-                          (currentPage.toInt()*_itemWidth),
-                          duration: kTabScrollDuration,
-                          curve: Curves.easeInOut,
-                        );
-                      });
                       setState(() {});
                     }catch(e){
                       print("(TRACE) Scroll Notification or Dimensions got the some problem.");
