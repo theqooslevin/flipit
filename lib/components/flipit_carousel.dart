@@ -143,7 +143,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
                   } else if (scrollNotification is ScrollUpdateNotification) {
-                    if(currentOffset > 3-1){
+                    if(currentOffset > _widgets.length-1){
                       try{
                         Future.delayed(Duration.zero,(){
                           _scrollController.animateTo(
@@ -158,20 +158,18 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                       }
                     }
                   } else if (scrollNotification is ScrollEndNotification) {
-                    if(currentPage > 0){
-                      try{
-                        Future.delayed(Duration.zero,(){
-                          _scrollController.animateTo(
-                            (currentPage.toInt()*_itemWidth),
-                            duration: kTabScrollDuration,
-                            curve: Curves.easeInOut,
-                          );
-                        });
-                        setState(() {});
-                      }catch(e){
-                        print("(TRACE) Scroll Notification or Dimensions got the some problem.");
-                        throw e;
-                      }
+                    try{
+                      Future.delayed(Duration.zero,(){
+                        _scrollController.animateTo(
+                          (currentPage.toInt()*_itemWidth),
+                          duration: kTabScrollDuration,
+                          curve: Curves.easeInOut,
+                        );
+                      });
+                      setState(() {});
+                    }catch(e){
+                      print("(TRACE) Scroll Notification or Dimensions got the some problem.");
+                      throw e;
                     }
                   }
                   return false;
