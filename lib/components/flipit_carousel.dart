@@ -30,10 +30,9 @@ class FlipitCarousel extends StatefulWidget{
 
   /// Pagination의 Point와 관련된 값을 지정합니다.
   ///
-  /// Pagination의 Point의 Padding, Width, Height, Color 값을 설정할 수 있습니다.
+  /// Pagination의 Point의 Padding, Size, Color 값을 설정할 수 있습니다.
   final double pointPadding;
-  final double pointWidth;
-  final double pointHeight;
+  final double pointSize;
   final Color pointSelectedColor;
   final Color pointDefaultColor;
 
@@ -71,8 +70,7 @@ class FlipitCarousel extends StatefulWidget{
     @required this.margin,
     this.paginationMargin,
     @required this.pointPadding,
-    this.pointWidth,
-    this.pointHeight,
+    this.pointSize,
     this.pointSelectedColor,
     this.pointDefaultColor,
     this.itemMargin,
@@ -94,8 +92,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
   EdgeInsets get _paginationMargin => this.widget.paginationMargin;
 
   double get _pointPadding => this.widget.pointPadding;
-  double get _pointWidth => this.widget.pointWidth;
-  double get _pointHeight => this.widget.pointHeight;
+  double get _pointSize => this.widget.pointSize;
   Color get _pointSelectedColor => this.widget.pointSelectedColor;
   Color get _pointDefaultColor => this.widget.pointDefaultColor;
 
@@ -201,6 +198,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                   itemBuilder: (context, index){
                     return Container(
                       margin: _itemMargin,
+                      padding: _padding,
                       width: _itemWidth,
                       height: _itemHeight,
                       child: _widgets[index],
@@ -213,7 +211,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
           Container(
             margin: _paginationMargin,
             width: screenW(),
-            height: _pointHeight,
+            height: _pointSize,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -230,11 +228,11 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
     List<Widget> rows = [];
     for(int idx=0; idx < _widgets.length; idx++){
       rows.add(Container(
-        width: _pointWidth,
-        height: _pointHeight,
+        width: _pointSize,
+        height: _pointSize,
         decoration: BoxDecoration(
           color: (idx == _controller.currentPage) ? _pointSelectedColor : _pointDefaultColor,
-          borderRadius: BorderRadius.all(Radius.circular(_pointWidth*2)),
+          borderRadius: BorderRadius.all(Radius.circular(_pointSize*2)),
         ),
       ));
       if(idx < _widgets.length) rows.add(SizedBox(width: _pointPadding));
@@ -252,7 +250,7 @@ class FlipitCarouselController extends ChangeNotifier {
 
 
   static FlipitCarouselController of(BuildContext context) {
-    final chewieControllerProvider = context.inheritFromWidgetOfExactType(_FlipitCarouselControllerProvider) as _FlipitCarouselControllerProvider;
+    final chewieControllerProvider = context.dependOnInheritedWidgetOfExactType<_FlipitCarouselControllerProvider>();
     return chewieControllerProvider.controller;
   }
 
