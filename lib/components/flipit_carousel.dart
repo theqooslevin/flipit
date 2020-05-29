@@ -6,6 +6,12 @@ import 'package:flipit/flipit.dart';
 /// Flipit Carousel Widget
 class FlipitCarousel extends StatefulWidget{
 
+  /// Carousel Controller를 지정합니다.
+  ///
+  /// Flipit Carousel에서 사용될 Controller를 지정합니다.
+  /// Scroll Position 및 페이지 상태 관리를 위해 필요합니다.
+  final FlipitCarouselController controller;
+
   /// 아이템들을 가져옵니다.
   ///
   /// ListView에서 표시할 아이템들을 가져옵니다.
@@ -50,15 +56,21 @@ class FlipitCarousel extends StatefulWidget{
   /// 참고로 본 위젯에서 별도의 viewport는 적용되지 않습니다.
   final double itemWidth;
 
+  /// 페이지가 변경될 때의 Function을 지정합니다.
+  ///
+  /// 현재 페이지 값을 double 형식으로 return 합니다.
+  final Function(double currentPage) onPageChanged;
+
   /// 위젯의 Padding 값을 지정합니다.
   final EdgeInsets padding;
 
   const FlipitCarousel({
-    Key key,
-    this.widgets,
-    this.margin,
+    @required Key key,
+    @required this.controller,
+    @required this.widgets,
+    @required this.margin,
     this.paginationMargin,
-    this.pointPadding,
+    @required this.pointPadding,
     this.pointWidth,
     this.pointHeight,
     this.pointSelectedColor,
@@ -67,6 +79,7 @@ class FlipitCarousel extends StatefulWidget{
     this.itemHeight,
     this.itemWidth,
     this.padding,
+    this.onPageChanged,
   }) : super(key: key);
 
   @override
@@ -74,6 +87,8 @@ class FlipitCarousel extends StatefulWidget{
 }
 
 class _FlipitCarouselState extends State<FlipitCarousel>{
+  FlipitCarouselController get _controller => this.widget.controller;
+
   List<Widget> get _widgets => this.widget.widgets;
   EdgeInsets get _margin => this.widget.margin;
   EdgeInsets get _paginationMargin => this.widget.paginationMargin;
@@ -89,14 +104,13 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
   double get _itemWidth => this.widget.itemWidth;
   EdgeInsets get _padding => this.widget.padding;
 
+  Function get _onPageChanged => this.widget.onPageChanged;
+
   double screenW() => MediaQuery.of(context).size.width;
   double screenH() => MediaQuery.of(context).size.height;
 
   FlipitScrollPhysics _scrollPhysics;
   ScrollController _scrollController;
-
-  double currentOffset = 0;
-  double currentPage = 0;
 
 
   @override
@@ -115,11 +129,24 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(FlipitCarousel oldWidget) {
+    if (oldWidget.controller != widget.controller) {
+      widget.controller.addListener((){
+        setState(() {});
+      });
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
   void _scrollListener() {
-    currentOffset = (_scrollController.offset/_itemWidth);
-    currentPage = currentOffset;
-    if(currentPage<=0) currentPage = 0;
-    else if((currentPage-currentPage.toInt()) >= 0.5) currentPage = currentPage.toInt()+1.0;
+    _controller.currentOffset = (_scrollController.offset/_itemWidth);
+    _controller.currentPage = _controller.currentOffset;
+    if(_controller.currentPage<=0){
+      _controller.currentPage = 0;
+    }else if((_controller.currentPage-_controller.currentPage.toInt()) >= 0.5){
+      _controller.currentPage = _controller.currentPage.toInt()+1.0;
+    }
   }
 
   @override
@@ -140,7 +167,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                 onNotification: (scrollNotification) {
                   if (scrollNotification is ScrollStartNotification) {
                   } else if (scrollNotification is ScrollUpdateNotification) {
-                    if(currentOffset > _widgets.length-1){
+                    if(_controller.currentOffset > _widgets.length-1){
                       try{
                         Future.delayed(Duration.zero,(){
                           _scrollController.animateTo(
@@ -155,12 +182,13 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                       }
                     }
                   } else if (scrollNotification is ScrollEndNotification) {
-                    try{
-                      setState(() {});
-                    }catch(e){
-                      print("(TRACE) Scroll Notification or Dimensions got the some problem.");
-                      throw e;
-                    }
+                  }
+                  try{
+                    if(_onPageChanged != null) _onPageChanged(this._controller.currentPage);
+                    setState(() {});
+                  }catch(e){
+                    print("(TRACE) Scroll Notification or Dimensions got the some problem.");
+                    throw e;
                   }
                   return false;
                 },
@@ -205,7 +233,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
         width: _pointWidth,
         height: _pointHeight,
         decoration: BoxDecoration(
-          color: (idx == currentPage) ? _pointSelectedColor : _pointDefaultColor,
+          color: (idx == _controller.currentPage) ? _pointSelectedColor : _pointDefaultColor,
           borderRadius: BorderRadius.all(Radius.circular(_pointWidth*2)),
         ),
       ));
@@ -216,3 +244,35 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
   }
 }
 
+class FlipitCarouselController extends ChangeNotifier {
+
+
+  double currentOffset = 0;
+  double currentPage = 0;
+
+
+  static FlipitCarouselController of(BuildContext context) {
+    final chewieControllerProvider = context.inheritFromWidgetOfExactType(_FlipitCarouselControllerProvider) as _FlipitCarouselControllerProvider;
+    return chewieControllerProvider.controller;
+  }
+
+  void setPage(double pageNumber){
+    currentOffset = pageNumber;
+    currentPage = currentOffset;
+    notifyListeners();
+  }
+}
+
+class _FlipitCarouselControllerProvider extends InheritedWidget {
+  const _FlipitCarouselControllerProvider({
+    Key key,
+    @required this.controller,
+    @required Widget child,
+  })  : assert(controller != null),
+        assert(child != null),
+        super(key: key, child: child);
+  final FlipitCarouselController controller;
+
+  @override
+  bool updateShouldNotify(_FlipitCarouselControllerProvider old) => controller != old.controller;
+}
