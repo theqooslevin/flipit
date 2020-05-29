@@ -12,11 +12,22 @@ class FlipitCarousel extends StatefulWidget{
   /// Scroll Position 및 페이지 상태 관리를 위해 필요합니다.
   final FlipitCarouselController controller;
 
+  /// Carousel Layout을 지정합니다.
+  ///
+  /// Flipit Carousel에서 사용될 Layout을 지정합니다.
+  /// Pagination 위치에 대한 설정이 변경되며, customize의 경우 Stack 구조로 변경됩니다.
+  final FlipitCarouselLayoutType type;
+
+  /// Carousel 지정합니다.
+  ///
+  /// Flipit Carousel에서 사용될 Layout을 지정합니다.
+  /// Pagination 위치에 대한 설정이 변경되며, Stack 구조로 변경됩니다.
+  final Function(Widget paginationWidget) positioned;
+
   /// 아이템들을 가져옵니다.
   ///
   /// ListView에서 표시할 아이템들을 가져옵니다.
   final List<Widget> widgets;
-
 
   /// Wrapper의 Margin을 지정합니다.
   ///
@@ -66,19 +77,22 @@ class FlipitCarousel extends StatefulWidget{
   const FlipitCarousel({
     @required Key key,
     @required this.controller,
+    @required this.type,
+    this.positioned,
     @required this.widgets,
     @required this.margin,
     this.paginationMargin,
-    @required this.pointPadding,
-    this.pointSize,
-    this.pointSelectedColor,
-    this.pointDefaultColor,
+    this.pointPadding = 10,
+    this.pointSize = 10,
+    this.pointSelectedColor = Colors.black,
+    this.pointDefaultColor = Colors.grey,
     this.itemMargin,
     this.itemHeight,
     this.itemWidth,
     this.padding,
     this.onPageChanged,
-  }) : super(key: key);
+  }) : assert(controller != null, 'You must provide a Flipit Carousel Controller'),
+      super(key: key);
 
   @override
   _FlipitCarouselState createState() => _FlipitCarouselState();
@@ -86,6 +100,8 @@ class FlipitCarousel extends StatefulWidget{
 
 class _FlipitCarouselState extends State<FlipitCarousel>{
   FlipitCarouselController get _controller => this.widget.controller;
+  FlipitCarouselLayoutType get _type => this.widget.type;
+  Function get _positioned => this.widget.positioned;
 
   List<Widget> get _widgets => this.widget.widgets;
   EdgeInsets get _margin => this.widget.margin;
@@ -151,77 +167,143 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
     return Container(
       margin: _margin,
       width: screenW(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        mainAxisSize: MainAxisSize.max,
-        children: <Widget>[
-          Container(
-            width: screenW(),
-            height: _itemHeight,
-            child: FlipitScrollbar(
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (scrollNotification) {
-                  if (scrollNotification is ScrollStartNotification) {
-                  } else if (scrollNotification is ScrollUpdateNotification) {
-                    if(_controller.currentOffset > _widgets.length-1){
+      child: _buildType(),
+    );
+  }
+
+  Widget _buildType(){
+    switch(_type){
+      case FlipitCarouselLayoutType.customize:
+        return Container(
+          width: screenW(),
+          height: _itemHeight,
+          child: Stack(
+            children: <Widget>[
+              Container(
+                width: screenW(),
+                height: _itemHeight,
+                child: FlipitScrollbar(
+                  child: NotificationListener<ScrollNotification>(
+                    onNotification: (scrollNotification) {
+                      if (scrollNotification is ScrollStartNotification) {
+                      } else if (scrollNotification is ScrollUpdateNotification) {
+                      } else if (scrollNotification is ScrollEndNotification) {
+                      }
                       try{
-                        Future.delayed(Duration.zero,(){
-                          _scrollController.animateTo(
-                            ((_widgets.length-1)*_itemWidth),
-                            duration: Duration.zero,
-                            curve: Curves.easeInOut,
-                          );
-                        });
+                        if(_onPageChanged != null) _onPageChanged(this._controller.currentPage);
+                        setState(() {});
                       }catch(e){
                         print("(TRACE) Scroll Notification or Dimensions got the some problem.");
                         throw e;
                       }
+                      return false;
+                    },
+                    child: ListView.builder(
+                      controller: _scrollController,
+                      physics: _scrollPhysics,
+                      scrollDirection: Axis.horizontal,
+                      shrinkWrap: false,
+                      itemCount: _widgets.length,
+                      itemBuilder: (context, index){
+                        return Container(
+                          margin: _itemMargin,
+                          padding: _padding,
+                          width: _itemWidth,
+                          height: _itemHeight,
+                          child: _widgets[index],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              _positioned != null ? _positioned(
+                Container(
+                  margin: _paginationMargin,
+                  height: _pointSize,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: _paginationPoints(),
+                  ),
+                )
+              ) : Container(child: Text("This widget need a customized positioned widget."),),
+            ],
+          ),
+        );
+      default:
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            Container(
+              width: screenW(),
+              height: _itemHeight,
+              child: FlipitScrollbar(
+                child: NotificationListener<ScrollNotification>(
+                  onNotification: (scrollNotification) {
+                    if (scrollNotification is ScrollStartNotification) {
+                    } else if (scrollNotification is ScrollUpdateNotification) {
+                      if(_controller.currentOffset > _widgets.length-1){
+                        try{
+                          Future.delayed(Duration.zero,(){
+                            _scrollController.animateTo(
+                              ((_widgets.length-1)*_itemWidth),
+                              duration: Duration.zero,
+                              curve: Curves.easeInOut,
+                            );
+                          });
+                        }catch(e){
+                          print("(TRACE) Scroll Notification or Dimensions got the some problem.");
+                          throw e;
+                        }
+                      }
+                    } else if (scrollNotification is ScrollEndNotification) {
                     }
-                  } else if (scrollNotification is ScrollEndNotification) {
-                  }
-                  try{
-                    if(_onPageChanged != null) _onPageChanged(this._controller.currentPage);
-                    setState(() {});
-                  }catch(e){
-                    print("(TRACE) Scroll Notification or Dimensions got the some problem.");
-                    throw e;
-                  }
-                  return false;
-                },
-                child: ListView.builder(
-                  controller: _scrollController,
-                  physics: _scrollPhysics,
-                  scrollDirection: Axis.horizontal,
-                  shrinkWrap: false,
-                  itemCount: _widgets.length,
-                  itemBuilder: (context, index){
-                    return Container(
-                      margin: _itemMargin,
-                      padding: _padding,
-                      width: _itemWidth,
-                      height: _itemHeight,
-                      child: _widgets[index],
-                    );
+                    try{
+                      if(_onPageChanged != null) _onPageChanged(this._controller.currentPage);
+                      setState(() {});
+                    }catch(e){
+                      print("(TRACE) Scroll Notification or Dimensions got the some problem.");
+                      throw e;
+                    }
+                    return false;
                   },
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    physics: _scrollPhysics,
+                    scrollDirection: Axis.horizontal,
+                    shrinkWrap: false,
+                    itemCount: _widgets.length,
+                    itemBuilder: (context, index){
+                      return Container(
+                        margin: _itemMargin,
+                        padding: _padding,
+                        width: _itemWidth,
+                        height: _itemHeight,
+                        child: _widgets[index],
+                      );
+                    },
+                  ),
                 ),
               ),
             ),
-          ),
-          Container(
-            margin: _paginationMargin,
-            width: screenW(),
-            height: _pointSize,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: _paginationPoints(),
-            ),
-          )
-        ],
-      ),
-    );
+            Container(
+              margin: _paginationMargin,
+              width: screenW(),
+              height: _pointSize,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: _paginationPoints(),
+              ),
+            )
+          ],
+        );
+    }
   }
 
   List<Widget> _paginationPoints(){
@@ -243,11 +325,8 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
 }
 
 class FlipitCarouselController extends ChangeNotifier {
-
-
   double currentOffset = 0;
   double currentPage = 0;
-
 
   static FlipitCarouselController of(BuildContext context) {
     final chewieControllerProvider = context.dependOnInheritedWidgetOfExactType<_FlipitCarouselControllerProvider>();
@@ -273,4 +352,9 @@ class _FlipitCarouselControllerProvider extends InheritedWidget {
 
   @override
   bool updateShouldNotify(_FlipitCarouselControllerProvider old) => controller != old.controller;
+}
+
+enum FlipitCarouselLayoutType{
+  normal,
+  customize
 }
