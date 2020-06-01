@@ -86,10 +86,8 @@ class _FlipitListViewState extends State<FlipitListView>{
             if(currentOffset > _widgets.length-1){
               try{
                 Future.delayed(Duration.zero,(){
-                  _scrollController.animateTo(
-                    ((_widgets.length-1)*_itemDimension),
-                    duration: Duration.zero,
-                    curve: Curves.easeInOut,
+                  _scrollController.jumpTo(
+                    ((_widgets.length-1)*_itemDimension)
                   );
                 });
               }catch(e){
