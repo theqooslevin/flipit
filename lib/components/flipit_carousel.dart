@@ -217,7 +217,8 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                   ),
                 ),
               ),
-              _positioned != null ? _positioned(
+              _positioned != null ?
+              (_controller.isShowPagination == true ? _positioned(
                 Container(
                   margin: _paginationMargin,
                   height: _pointSize,
@@ -228,7 +229,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                     children: _paginationPoints(),
                   ),
                 )
-              ) : Container(child: Text("This widget need a customized positioned widget."),),
+              ) : Container()) : Container(child: Text("This widget need a customized positioned widget."),),
             ],
           ),
         );
@@ -290,7 +291,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                 ),
               ),
             ),
-            Container(
+            _controller.isShowPagination == true ? Container(
               margin: _paginationMargin,
               width: screenW(),
               height: _pointSize,
@@ -300,7 +301,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                 mainAxisSize: MainAxisSize.min,
                 children: _paginationPoints(),
               ),
-            )
+            ) : Container(),
           ],
         );
     }
@@ -325,6 +326,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
 }
 
 class FlipitCarouselController extends ChangeNotifier {
+  bool isShowPagination = true;
   double currentOffset = 0;
   double currentPage = 0;
 
