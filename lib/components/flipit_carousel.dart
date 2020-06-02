@@ -247,20 +247,6 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                   onNotification: (scrollNotification) {
                     if (scrollNotification is ScrollStartNotification) {
                     } else if (scrollNotification is ScrollUpdateNotification) {
-                      if(_controller.currentOffset > _widgets.length-1){
-                        try{
-                          Future.delayed(Duration.zero,(){
-                            _scrollController.animateTo(
-                              ((_widgets.length-1)*_itemWidth),
-                              duration: Duration.zero,
-                              curve: Curves.easeInOut,
-                            );
-                          });
-                        }catch(e){
-                          print("(TRACE) Scroll Notification or Dimensions got the some problem.");
-                          throw e;
-                        }
-                      }
                     } else if (scrollNotification is ScrollEndNotification) {
                     }
                     try{
