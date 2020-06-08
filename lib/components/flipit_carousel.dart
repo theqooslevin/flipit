@@ -160,6 +160,14 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
     }else if((_controller.currentPage-_controller.currentPage.toInt()) >= 0.5){
       _controller.currentPage = _controller.currentPage.toInt()+1.0;
     }
+
+    try{
+      if(_onPageChanged != null) _onPageChanged(this._controller.currentPage);
+      setState(() {});
+    }catch(e){
+      print("(TRACE) Scroll Notification or Dimensions got the some problem.");
+      throw e;
+    }
   }
 
   @override
@@ -189,6 +197,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                       } else if (scrollNotification is ScrollUpdateNotification) {
                       } else if (scrollNotification is ScrollEndNotification) {
                       }
+
                       try{
                         if(_onPageChanged != null) _onPageChanged(this._controller.currentPage);
                         setState(() {});
@@ -249,6 +258,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
                     } else if (scrollNotification is ScrollUpdateNotification) {
                     } else if (scrollNotification is ScrollEndNotification) {
                     }
+
                     try{
                       if(_onPageChanged != null) _onPageChanged(this._controller.currentPage);
                       setState(() {});
@@ -300,7 +310,7 @@ class _FlipitCarouselState extends State<FlipitCarousel>{
         width: _pointSize,
         height: _pointSize,
         decoration: BoxDecoration(
-          color: (idx == _controller.currentPage) ? _pointSelectedColor : _pointDefaultColor,
+          color: (idx == _controller.currentPage.round()) ? _pointSelectedColor : _pointDefaultColor,
           borderRadius: BorderRadius.all(Radius.circular(_pointSize*2)),
         ),
       ));

@@ -1,6 +1,6 @@
 name: flipit
 description: ListView with transform animation seems look like PageView. and included more widgets.
-version: 0.0.1+1
+version: 0.0.1+2
 author: David Oh <dalhooyn3@gmail.com>
 homepage: https://www.github.com/silverstone0603/flipit
 
