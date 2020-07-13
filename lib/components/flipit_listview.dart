@@ -5,6 +5,11 @@ import 'package:flipit/flipit.dart';
 /// Flipit Widget
 class FlipitListView extends StatefulWidget{
 
+  /// 스크롤에 대한 제어를 담당하는 Scroll Controller 입니다.
+  /// 
+  /// 별도로 선언이 되지 않을 경우 자체적으로 생성하여 사용합니다.
+  final ScrollController scrollController;
+
   /// 아이템들을 가져옵니다.
   ///
   /// ListView에서 표시할 아이템들을 가져옵니다.
@@ -27,12 +32,21 @@ class FlipitListView extends StatefulWidget{
   /// 위젯의 Padding 값을 지정합니다.
   final EdgeInsets padding;
 
+
+  /// 페이지가 변경되었을 경우 실행되는 Callback Function 입니다.
+  /// 
+  /// 스크롤이 동작되기 시작할 때의 Index 값과 스크롤이 끝났을 때의 Index 값을 비교하여
+  /// 값이 달라졌을 경우에만 실행됩니다.
+  final Function(int index) onPageChanged;
+
   const FlipitListView({
     Key key,
-    this.widgets,
-    this.itemDimension,
+    this.scrollController,
+    @required this.widgets,
+    @required this.itemDimension,
     this.itemWidth,
     this.padding,
+    this.onPageChanged,
   }) : super(key: key);
 
   @override
@@ -40,19 +54,23 @@ class FlipitListView extends StatefulWidget{
 }
 
 class _FlipitListViewState extends State<FlipitListView>{
+  ScrollController _scrollController;
   List<Widget> get _widgets => this.widget.widgets;
   double get _itemDimension => this.widget.itemDimension;
   double get _itemWidth => this.widget.itemWidth;
   EdgeInsets get _padding => this.widget.padding;
+  Function get _onPageChanged => this.widget.onPageChanged;
 
   double screenW() => MediaQuery.of(context).size.width;
   double screenH() => MediaQuery.of(context).size.height;
 
   ScrollPhysics _scrollPhysics;
-  ScrollController _scrollController;
 
-  double currentOffset = 0;
-  double currentPage = 0;
+  double _currentOffset = 0;
+  double _currentPage = 0;
+
+  int _previousIndex;
+  int _nowIndex = 0;
 
 
   @override
@@ -61,13 +79,15 @@ class _FlipitListViewState extends State<FlipitListView>{
     _scrollPhysics = FlipitScrollPhysics(
       itemDimension: _itemDimension,
     );
-    _scrollController = ScrollController();
+
+    if(this.widget.scrollController != null) _scrollController = this.widget.scrollController;
+    else _scrollController = ScrollController();
 
     _scrollController.addListener((){
-      currentOffset = (_scrollController.offset/_itemDimension);
-      currentPage = currentOffset;
-      if(currentPage<=0) currentPage = 0;
-      else if((currentPage-currentPage.toInt()) >= 0.5) currentPage = currentPage.toInt()+1.0;
+      _currentOffset = (_scrollController.offset/_itemDimension);
+      _currentPage = _currentOffset;
+      if(_currentPage<=0) _currentPage = 0;
+      else if((_currentPage-_currentPage.toInt()) >= 0.5) _currentPage = _currentPage.toInt()+1.0;
     });
   }
 
@@ -82,8 +102,14 @@ class _FlipitListViewState extends State<FlipitListView>{
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification is ScrollStartNotification) {
+            try{
+              if(_previousIndex == null) _previousIndex = (_currentPage.toInt()*_itemDimension).toInt();
+            }catch(e){
+              print("(TRACE) Scroll Notification or Dimensions got the some problem.");
+              throw e;
+            }
           } else if (scrollNotification is ScrollUpdateNotification) {
-            if(currentOffset > _widgets.length-1){
+            if(_currentOffset > _widgets.length-1){
               try{
                 Future.delayed(Duration.zero,(){
                   _scrollController.jumpTo(
@@ -96,11 +122,11 @@ class _FlipitListViewState extends State<FlipitListView>{
               }
             }
           } else if (scrollNotification is ScrollEndNotification) {
-            if(currentPage > 0){
+            if(_currentPage > 0){
               try{
                 Future.delayed(Duration.zero,(){
                   _scrollController.animateTo(
-                    (currentPage.toInt()*_itemDimension),
+                    (_currentPage.toInt()*_itemDimension),
                     duration: kTabScrollDuration,
                     curve: Curves.easeInOut,
                   );
@@ -110,6 +136,19 @@ class _FlipitListViewState extends State<FlipitListView>{
                 throw e;
               }
             }
+
+            // Page Updated Callback Function
+            try{
+              if(_previousIndex != null && _onPageChanged != null){
+                _nowIndex = _currentPage.toInt();
+                if(_previousIndex != _nowIndex) _onPageChanged(_nowIndex);
+              }
+            }catch(e){
+              print("(TRACE) Widget has some problem about count to index.");
+              throw e;
+            }
+            
+            _previousIndex = null;
           }
           return false;
         },
@@ -137,8 +176,8 @@ class _FlipitListViewState extends State<FlipitListView>{
     return AnimatedBuilder(
       animation: _scrollController,
       builder: (context, child) {
-        value = (currentOffset - index).abs();
-        if(index >= currentOffset) value = 1.0;
+        value = (_currentOffset - index).abs();
+        if(index >= _currentOffset) value = 1.0;
         else value = 1.0 - value;
 
         value = index < _widgets.length-1 ? value.clamp(0.0, 1.0).abs() : 1.0;
@@ -160,8 +199,8 @@ class _FlipitListViewState extends State<FlipitListView>{
         width: cardWidth,
         height: index >= _widgets.length-1 ?
           (
-            index >= currentPage ?
-            screenH()-(screenH()*(currentPage-index)).clamp(0, screenH()) :
+            index >= _currentPage ?
+            screenH()-(screenH()*(_currentPage-index)).clamp(0, screenH()) :
             screenH()
           ) :
           cardHeight,
