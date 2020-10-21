@@ -74,7 +74,7 @@ class _FlipitScrollbarState extends State<FlipitScrollbar>
     super.initState();
     _fadeoutAnimationController = AnimationController(
       duration: _kScrollbarFadeDuration,
-      TickerProvider: this,
+      vsync: this,
     );
     _fadeoutOpacityAnimation = CurvedAnimation(
       parent: _fadeoutAnimationController,
@@ -327,7 +327,7 @@ class _CupertinoScrollbarState extends State<DirectionalCupertinoScrollbar> with
     super.initState();
     _fadeoutAnimationController = AnimationController(
       duration: _kScrollbarFadeDuration,
-      TickerProvider: this,
+      vsync: this,
     );
     _fadeoutOpacityAnimation = CurvedAnimation(
       parent: _fadeoutAnimationController,
@@ -335,7 +335,7 @@ class _CupertinoScrollbarState extends State<DirectionalCupertinoScrollbar> with
     );
     _thicknessAnimationController = AnimationController(
       duration: _kScrollbarResizeDuration,
-      TickerProvider: this,
+      vsync: this,
     );
     _thicknessAnimationController.addListener(() {
       _painter.updateThickness(_thickness, _radius);
