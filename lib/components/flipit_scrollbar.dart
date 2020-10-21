@@ -55,7 +55,8 @@ class FlipitScrollbar extends StatefulWidget {
   _FlipitScrollbarState createState() => _FlipitScrollbarState();
 }
 
-class _FlipitScrollbarState extends State<FlipitScrollbar> with TickerProviderStateMixin {
+class _FlipitScrollbarState extends State<FlipitScrollbar>
+    with TickerProviderStateMixin {
   static const double _kScrollbarThickness = 3.0;
   static const Duration _kScrollbarFadeDuration = Duration(milliseconds: 300);
   static const Duration _kScrollbarTimeToFade = Duration(milliseconds: 600);
@@ -72,8 +73,8 @@ class _FlipitScrollbarState extends State<FlipitScrollbar> with TickerProviderSt
   void initState() {
     super.initState();
     _fadeoutAnimationController = AnimationController(
-      vsync: this,
       duration: _kScrollbarFadeDuration,
+      TickerProvider: this,
     );
     _fadeoutOpacityAnimation = CurvedAnimation(
       parent: _fadeoutAnimationController,
@@ -105,6 +106,7 @@ class _FlipitScrollbarState extends State<FlipitScrollbar> with TickerProviderSt
         _materialPainter = _buildMaterialScrollbarPainter();
         _useCupertinoScrollbar = false;
         break;
+      default:
     }
     assert(_useCupertinoScrollbar != null);
   }
@@ -324,16 +326,16 @@ class _CupertinoScrollbarState extends State<DirectionalCupertinoScrollbar> with
   void initState() {
     super.initState();
     _fadeoutAnimationController = AnimationController(
-      vsync: this,
       duration: _kScrollbarFadeDuration,
+      TickerProvider: this,
     );
     _fadeoutOpacityAnimation = CurvedAnimation(
       parent: _fadeoutAnimationController,
       curve: Curves.fastOutSlowIn,
     );
     _thicknessAnimationController = AnimationController(
-      vsync: this,
       duration: _kScrollbarResizeDuration,
+      TickerProvider: this,
     );
     _thicknessAnimationController.addListener(() {
       _painter.updateThickness(_thickness, _radius);
