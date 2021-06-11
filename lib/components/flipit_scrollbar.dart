@@ -593,5 +593,5 @@ bool _hitTestInteractive(GlobalKey customPaintKey, Offset offset) {
   final ScrollbarPainter painter = customPaint.foregroundPainter;
   final RenderBox renderBox = customPaintKey.currentContext.findRenderObject();
   final Offset localOffset = renderBox.globalToLocal(offset);
-  return painter.hitTestInteractive(localOffset);
+  return painter.hitTestInteractive(localOffset, PointerDeviceKind.touch);
 }
